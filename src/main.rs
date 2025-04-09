@@ -1,6 +1,8 @@
 use std::env;
 use std::collections::HashMap;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::format::ParseError;
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -10,16 +12,21 @@ async fn hello() -> impl Responder {
 #[post("/addtext")]
 async fn echo(req_body: String) -> impl Responder {
     let lines = req_body.lines();
-    let mut progs: Vec::<(String, String)> = Vec::new();
-    let mut time: &str = "";
+    let mut progs: Vec::<(NaiveTime, String)> = Vec::new();
+    let mut time: Option<NaiveTime> = Option::None;
     lines.for_each(|line| {
         if line.len()==5 {
-            time = line;
+            let time_only: Result<NaiveTime, ParseError> = NaiveTime::parse_from_str(line, "%H:%M");
+            time = Option::Some(time_only.unwrap());
         }else{
-            progs.push((time.to_string().clone(), line.to_string().clone()));
+            if time != Option::None {
+                progs.push((time.unwrap(), line.to_string().clone()));
+                time = Option::None;
+            }
         }
     });
     print!{"{progs:?}"}
+
     HttpResponse::Ok().body(req_body)
 }
 
