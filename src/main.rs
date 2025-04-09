@@ -13,13 +13,17 @@ async fn hello() -> impl Responder {
 async fn echo(req_body: String) -> impl Responder {
     
     let mut progs: Vec::<(NaiveTime, String)> = Vec::new();
-    let mut lines = req_body.lines();
+    let mut lines = req_body.lines().enumerate();
 
-    while let Some(time) = lines.next() {        
-        let time_only = NaiveTime::parse_from_str(time, "%H:%M");
-        let title = lines.next().unwrap();
+    while let Some(time) = lines.next() {    
+        let time_only = NaiveTime::parse_from_str(time.1, "%H:%M");
+        assert!(time_only.is_ok(), "Error in line {}. Expected time (%H:%M), found {}.", time.0+1, time.1);
 
-        progs.push((time_only.unwrap(), title.to_string().clone()));
+        let title = lines.next();       
+        assert!(title.is_some(), "Expected program title, found end of file.");
+        assert!(title.unwrap().1.len()>0, "Error in line {}. Expected program title (a string longer than 0).", title.unwrap().0+1);
+
+        progs.push((time_only.unwrap(), title.unwrap().1.to_string().clone()));
     }
 
     println!{"{progs:?}"}
