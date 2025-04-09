@@ -7,8 +7,19 @@ async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-#[post("/echo")]
+#[post("/addtext")]
 async fn echo(req_body: String) -> impl Responder {
+    let lines = req_body.lines();
+    let mut progs: Vec::<(String, String)> = Vec::new();
+    let mut time: &str = "";
+    lines.for_each(|line| {
+        if line.len()==5 {
+            time = line;
+        }else{
+            progs.push((time.to_string().clone(), line.to_string().clone()));
+        }
+    });
+    print!{"{progs:?}"}
     HttpResponse::Ok().body(req_body)
 }
 
@@ -18,6 +29,8 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    print!("line");
 
     let vars: HashMap<String, String> = env::vars().collect();
     let ip = match vars.get("ACTIX_IP") {
