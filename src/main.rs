@@ -23,6 +23,8 @@ async fn echo(req_body: String) -> impl Responder {
         while let Some(line1) = lines.next() {    
             let time = NaiveTime::parse_from_str(line1.1, "%H:%M");
             assert!(time.is_ok(), "Error in {}, expected time (%H:%M).", formatline(line1));
+            let is_before = progs.last().is_none() || time.unwrap() > progs.last().unwrap().0;
+            assert!(is_before, "Error in {}. Added time was before last time.", formatline(line1));
 
             let line2 = lines.next().expect("Found end of file, expected program title.");       
             assert!(line2.1.len()>0, "Error in {}, expected program title (a string longer than 0).", formatline(line2));
@@ -32,7 +34,7 @@ async fn echo(req_body: String) -> impl Responder {
         progs
     };
     println!{"{progs:?}"}
-    HttpResponse::Ok().body(req_body)
+    HttpResponse::Ok().body(format!{"{progs:?}"})
 
 }
 
