@@ -11,23 +11,20 @@ async fn hello() -> impl Responder {
 
 #[post("/addtext")]
 async fn echo(req_body: String) -> impl Responder {
-    let lines = req_body.lines();
+    
     let mut progs: Vec::<(NaiveTime, String)> = Vec::new();
-    let mut time: Option<NaiveTime> = Option::None;
-    lines.for_each(|line| {
-        if line.len()==5 {
-            let time_only: Result<NaiveTime, ParseError> = NaiveTime::parse_from_str(line, "%H:%M");
-            time = Option::Some(time_only.unwrap());
-        }else{
-            if time != Option::None {
-                progs.push((time.unwrap(), line.to_string().clone()));
-                time = Option::None;
-            }
-        }
-    });
-    print!{"{progs:?}"}
+    let mut lines = req_body.lines();
 
+    while let Some(time) = lines.next() {        
+        let time_only = NaiveTime::parse_from_str(time, "%H:%M");
+        let title = lines.next().unwrap();
+
+        progs.push((time_only.unwrap(), title.to_string().clone()));
+    }
+
+    println!{"{progs:?}"}
     HttpResponse::Ok().body(req_body)
+
 }
 
 async fn manual_hello() -> impl Responder {
