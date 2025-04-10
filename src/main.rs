@@ -35,6 +35,26 @@ async fn now(data: web::Data<AppState>) -> String {
     format!("Programs: {now:?}")
 }
 
+#[get("/next3")]
+async fn next3(data: web::Data<AppState>) -> String {
+    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+  
+    let naive_time = Local::now().naive_local().time();
+    let mut count=0;
+
+    let nexts  = progs
+        .iter()
+        .filter(|x| {            
+            if x.0 > naive_time {
+                count += 1;
+                count <= 3
+            } else {false}})
+        .cloned()
+        .collect::<Vec<(NaiveTime, String)>>();
+
+    format!("Programs: {nexts:?}")
+}
+
 fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveTime, String)>, String> {
     if let Some(line) = oline {
         Err(format!("Error in line {} ('{}'): {}", line.0+1, line.1, msg))
@@ -112,6 +132,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .service(index)
             .service(now)
+            .service(next3)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind((ip, 8080))?
