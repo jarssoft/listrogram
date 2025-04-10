@@ -9,8 +9,12 @@ async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-fn formatline(line: (usize, &str)) -> String {
-    format!("line {} '{}'", line.0+1, line.1)
+fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveTime, String)>, String> {
+    if let Some(line) = oline {
+        Err(format!("Error in line {} ('{}'): {}", line.0+1, line.1, msg))
+    }else{
+        Err(format!("Error: {}", msg))
+    }
 }
 
 fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, String> {
@@ -20,20 +24,20 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
     while let Some(line1) = lines.next() {    
         let time = NaiveTime::parse_from_str(line1.1, "%H:%M");
         if time.is_err() {
-            return Err(format!("Error in {}, expected time (%H:%M).", formatline(line1)));
+            return format_error("Expected time (%H:%M).", Some(line1));
         }        
-        if progs.last().is_some() && time.unwrap() < progs.last().unwrap().0 {
-            return Err(format!("Error in {}. Added time was before last time.", formatline(line1)));
+        if progs.last().is_some() && time.unwrap() < progs.last().unwrap().0 {            
+            return format_error("Added time was before last time.", Some(line1));
         }
 
         let nextline = lines.next();
         if nextline.is_none(){
-            return Err(format!("Found end of file, expected program title."));
+            return format_error("Found end of file, expected program title.", nextline);
         }
         let line2 = nextline.unwrap();
            
         if line2.1.is_empty() {
-            return Err(format!("Error in {}, expected program title (a string longer than 0).", formatline(line2)));
+            return format_error("Program title must be longer than 0.", nextline);
         }
 
         progs.push((time.unwrap(), line2.1.to_string().clone()));
