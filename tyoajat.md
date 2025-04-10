@@ -7,6 +7,8 @@
 | 6.4.  | 5    | Rustin kokeilua virtuaalipalvelimella  |
 | 9.4.  | 7    | Tekstimuotoisen ohjelmatiedon jäsennys |
 | 10.4. | 2    | Palauta virheilmoitus (HTTP) |
+| 10.4. | 2    | Tietojen haku |
+| 10.4. | 1    | Refaktoroi routerit erillisiin tiedostoihin |
 
-Aikaa käytetty: 24 h
+Aikaa käytetty: 27 h
 Aikatavoie: 175 h
