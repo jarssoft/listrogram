@@ -1,12 +1,38 @@
 use std::env;
 use std::collections::HashMap;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 //use chrono::format::ParseError;
+use std::sync::Mutex;
+
+struct AppState {
+    progs: Mutex<Vec::<(NaiveTime, String)>>, // <- Mutex is necessary to mutate safely across threads
+}
 
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
+}
+
+#[get("/list")]
+async fn index(data: web::Data<AppState>) -> String {
+    let progs = data.progs.lock().unwrap();
+    format!("Programs: {progs:?}")
+}
+
+#[get("/now")]
+async fn now(data: web::Data<AppState>) -> String {
+    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+  
+    let naive_time = Local::now().naive_local().time();
+    
+    let now = progs
+        .iter()
+        .reduce(|x,y|{
+            if y.0 < naive_time {y} else {x}
+        }); 
+
+    format!("Programs: {now:?}")
 }
 
 fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveTime, String)>, String> {
@@ -34,8 +60,8 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
         if nextline.is_none(){
             return format_error("Found end of file, expected program title.", nextline);
         }
-        let title = nextline.unwrap().1;
-           
+
+        let title = nextline.unwrap().1;           
         if title.is_empty() {
             return format_error("Program title must be longer than 0.", nextline);
         }
@@ -47,10 +73,16 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
 }
 
 #[post("/addtext")]
-async fn echo(req_body: String) -> impl Responder {
+async fn echo(data: web::Data<AppState>, req_body: String) -> impl Responder {
+
+    let mut progs = data.progs.lock().unwrap(); // <- get counter's MutexGuard
+    
     let res: Result<Vec<(NaiveTime, String)>, String> = parse_from_text(req_body);
     match res {
-        Ok(value) => HttpResponse::Ok().body(format!{"{value:?}"}),
+        Ok(value) => {
+            *progs=value.clone(); 
+            HttpResponse::Ok().body(format!{"{value:?}"})
+        },
         Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
     }
 }
@@ -62,7 +94,10 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    print!("line");
+    // Note: web::Data created _outside_ HttpServer::new closure
+    let progs = web::Data::new(AppState {
+        progs: Mutex::new(Vec::new()),
+    });
 
     let vars: HashMap<String, String> = env::vars().collect();
     let ip = match vars.get("ACTIX_IP") {
@@ -70,10 +105,13 @@ async fn main() -> std::io::Result<()> {
         None => "127.0.0.1",
     };
 
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         App::new()
+            .app_data(progs.clone()) // <- register the created data
             .service(hello)
             .service(echo)
+            .service(index)
+            .service(now)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind((ip, 8080))?
