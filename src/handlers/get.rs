@@ -1,5 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 
 #[get("/list")]
 async fn index(data: web::Data<crate::AppState>) -> impl Responder {
@@ -7,13 +7,21 @@ async fn index(data: web::Data<crate::AppState>) -> impl Responder {
     web::Json((*progs).clone())
 }
 
-fn getnow(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>) -> Vec<(NaiveTime, String)>{
-    let naive_time = Local::now().naive_local().time();
+fn current_time(timezoneopt: Option<i32>) -> NaiveTime {
+    match timezoneopt {
+        Some(timezone) => {
+            let tz_offset = FixedOffset::east_opt(timezone).unwrap();
+            tz_offset.from_utc_datetime(&Utc::now().naive_utc()).naive_local().time()}
+        None => Local::now().naive_local().time()
+    }
+}
+
+fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime) -> Vec<(NaiveTime, String)>{
     
     let now2 = progs
         .iter()
         .reduce(|x,y|{
-            if y.0 < naive_time {y} else {x}
+            if y.0 < time {y} else {x}
         }); 
 
     match now2 {
@@ -25,17 +33,17 @@ fn getnow(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>) -> Vec<(N
 #[get("/now")]
 async fn now(data: web::Data<crate::AppState>) -> impl Responder {
     let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
-    web::Json(getnow(&progs)) 
+    let time = current_time(data.timezone);
+    web::Json(progs_by_time(&progs, time)) 
 }
 
-fn getnext(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, max:usize) -> Vec<(NaiveTime, String)>{   
-    let naive_time = Local::now().naive_local().time();
+fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime, max:usize) -> Vec<(NaiveTime, String)>{   
     let mut count=0;
 
     progs
         .iter()
         .filter(|x| {            
-            if x.0 > naive_time {
+            if x.0 > time {
                 count += 1;
                 count <= max
             } else {false}})
@@ -46,15 +54,17 @@ fn getnext(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, max:usiz
 #[get("/next/{max}")]
 async fn next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
     let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+    let time = current_time(data.timezone);
     let max = path.into_inner();
-    web::Json(getnext(&progs, max)) 
+    web::Json(progs_after(&progs, time, max)) 
 }
 
 #[get("/now-and-next/{max}")]
 async fn now_and_next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
-    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();  
+    let time = current_time(data.timezone);
     let max = path.into_inner();
-    let mut response = getnow(&progs);
-    response.append(&mut getnext(&progs, max-1));
+    let mut response = progs_by_time(&progs, time);
+    response.append(&mut progs_after(&progs, time, max-1));
     web::Json(response) 
 }

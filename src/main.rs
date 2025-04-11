@@ -10,6 +10,7 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct AppState {
     pub progs: Mutex<Vec::<(NaiveTime, String)>>, // <- Mutex is necessary to mutate safely across threads
+    pub timezone: Option<i32>,
 }
 
 #[get("/")]
@@ -24,20 +25,21 @@ async fn manual_hello() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    // Note: web::Data created _outside_ HttpServer::new closure
-    let progs = web::Data::new(crate::AppState {
-        progs: Mutex::new(Vec::new()),
-    });
-
     let vars: HashMap<String, String> = env::vars().collect();
     let ip = match vars.get("ACTIX_IP") {
         Some(p) => p.as_str(),
         None => "127.0.0.1",
     };
+    
+    // Note: web::Data created _outside_ HttpServer::new closure
+    let appdata = web::Data::new(crate::AppState {
+        progs: Mutex::new(Vec::new()),
+        timezone: vars.get("TIMEZONE").map(|v| v.parse::<i32>().unwrap())
+    });
 
     HttpServer::new(move || {
         App::new()
-            .app_data(progs.clone()) // <- register the created data
+            .app_data(appdata.clone()) // <- register the created data
             .service(hello)
             .service(add::addtext)
             .service(get::index)
