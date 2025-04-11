@@ -623,6 +623,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link",
 ]
@@ -1191,6 +1192,7 @@ dependencies = [
  "actix-web",
  "cargo-watch",
  "chrono",
+ "serde",
 ]
 
 [[package]]

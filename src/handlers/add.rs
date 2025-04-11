@@ -47,7 +47,10 @@ async fn addtext(data: web::Data<crate::AppState>, req_body: String) -> impl Res
     match res {
         Ok(value) => {
             *progs=value.clone(); 
-            HttpResponse::Ok().body(format!{"{value:?}"})
+            //HttpResponse::Ok().body(format!{"{value:?}"})
+            //web::Json(value)
+            let json = web::Json(value);
+            HttpResponse::Ok().json(json)
         },
         Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
     }

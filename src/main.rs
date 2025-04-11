@@ -5,7 +5,9 @@ use std::sync::Mutex;
 pub mod handlers;
 use handlers::{add, get};
 use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct AppState {
     pub progs: Mutex<Vec::<(NaiveTime, String)>>, // <- Mutex is necessary to mutate safely across threads
 }
