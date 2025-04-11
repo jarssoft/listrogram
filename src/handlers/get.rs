@@ -1,5 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Utc};
 
 #[get("/list")]
 async fn index(data: web::Data<crate::AppState>) -> impl Responder {
@@ -30,16 +30,6 @@ fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, ti
     }
 }
 
-fn middleware(data: &web::Data<crate::AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveTime) {
-    (data.progs.lock().unwrap(), current_time(data.timezone))
-}
-
-#[get("/now")]
-async fn now(data: web::Data<crate::AppState>) -> impl Responder {
-    let (progs, time) = middleware(&data);
-    web::Json(progs_by_time(&progs, time)) 
-}
-
 fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime, max:usize) -> Vec<(NaiveTime, String)>{   
     let mut count=0;
 
@@ -52,6 +42,25 @@ fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time
             } else {false}})
         .cloned()
         .collect::<Vec<(NaiveTime, String)>>()
+}
+
+fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime, end:NaiveTime) -> Vec<(NaiveTime, String)>{   
+    progs
+        .iter()
+        .filter(|x| x.0 >= time && x.0 <= end )
+        .cloned()
+        .collect::<Vec<(NaiveTime, String)>>()
+}
+
+
+fn middleware(data: &web::Data<crate::AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveTime) {
+    (data.progs.lock().unwrap(), current_time(data.timezone))
+}
+
+#[get("/now")]
+async fn now(data: web::Data<crate::AppState>) -> impl Responder {
+    let (progs, time) = middleware(&data);
+    web::Json(progs_by_time(&progs, time)) 
 }
 
 #[get("/next/{max}")]
@@ -67,5 +76,14 @@ async fn now_and_next(path: web::Path<usize>, data: web::Data<crate::AppState>) 
     let max = path.into_inner();
     let mut response = progs_by_time(&progs, time);
     response.append(&mut progs_after(&progs, time, max-1));
+    web::Json(response) 
+}
+
+#[get("/now-and-soon/{minutes}")]
+async fn now_and_soon(path: web::Path<i64>, data: web::Data<crate::AppState>) -> impl Responder  {
+    let (progs, time) = middleware(&data);
+    let minutes = path.into_inner();   
+    let mut response = progs_by_time(&progs, time); 
+    response.append(&mut progs_in_time(&progs, time, time + TimeDelta::try_minutes(minutes).unwrap()));
     web::Json(response) 
 }

@@ -46,6 +46,7 @@ async fn main() -> std::io::Result<()> {
             .service(get::now)
             .service(get::next)
             .service(get::now_and_next)
+            .service(get::now_and_soon)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind((ip, 8080))?
