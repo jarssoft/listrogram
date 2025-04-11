@@ -7,35 +7,32 @@ async fn index(data: web::Data<crate::AppState>) -> impl Responder {
     web::Json((*progs).clone())
 }
 
-#[get("/now")]
-async fn now(data: web::Data<crate::AppState>) -> impl Responder {
-    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
-  
+fn getnow(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>) -> Vec<(NaiveTime, String)>{
     let naive_time = Local::now().naive_local().time();
     
-    let now = progs
+    let now2 = progs
         .iter()
         .reduce(|x,y|{
             if y.0 < naive_time {y} else {x}
         }); 
 
-    let nows = match now {
+    match now2 {
         Some(prog) => vec![(*prog).clone()],
         None => vec![]        
-    };
-
-    web::Json(nows) 
+    }
 }
 
-#[get("/next/{max}")]
-async fn next3(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
+#[get("/now")]
+async fn now(data: web::Data<crate::AppState>) -> impl Responder {
     let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
-  
+    web::Json(getnow(&progs)) 
+}
+
+fn getnext(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, max:usize) -> Vec<(NaiveTime, String)>{   
     let naive_time = Local::now().naive_local().time();
     let mut count=0;
-    let max = path.into_inner();
 
-    let nexts  = progs
+    progs
         .iter()
         .filter(|x| {            
             if x.0 > naive_time {
@@ -43,7 +40,21 @@ async fn next3(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl
                 count <= max
             } else {false}})
         .cloned()
-        .collect::<Vec<(NaiveTime, String)>>();
+        .collect::<Vec<(NaiveTime, String)>>()
+}
 
-    web::Json(nexts)
+#[get("/next/{max}")]
+async fn next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
+    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+    let max = path.into_inner();
+    web::Json(getnext(&progs, max)) 
+}
+
+#[get("/now-and-next/{max}")]
+async fn now_and_next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
+    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
+    let max = path.into_inner();
+    let mut response = getnow(&progs);
+    response.append(&mut getnext(&progs, max-1));
+    web::Json(response) 
 }
