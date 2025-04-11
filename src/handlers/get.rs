@@ -20,11 +20,11 @@ async fn now(data: web::Data<crate::AppState>) -> impl Responder {
         }); 
 
     let nows = match now {
-        Some(x) => vec![(*now.unwrap()).clone()],
+        Some(prog) => vec![(*prog).clone()],
         None => vec![]        
     };
 
-    web::Json(nows)
+    web::Json(nows) 
 }
 
 #[get("/next/{max}")]
