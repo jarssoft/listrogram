@@ -10,6 +10,7 @@
 | 10.4. | 2    | Tietojen haku |
 | 10.4. | 1    | Refaktoroi routerit erillisiin tiedostoihin |
 | 11.4. | 1    | Palautus JSON-muotoon |
+| 11.4. | 1    | Lisää mahdollisuus säätää aikavyöhykettä palvelinta varten |
 
-Aikaa käytetty: 27 h
+Aikaa käytetty: 29 h
 Aikatavoie: 175 h

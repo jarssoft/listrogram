@@ -30,10 +30,13 @@ fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, ti
     }
 }
 
+fn middleware(data: &web::Data<crate::AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveTime) {
+    (data.progs.lock().unwrap(), current_time(data.timezone))
+}
+
 #[get("/now")]
 async fn now(data: web::Data<crate::AppState>) -> impl Responder {
-    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
-    let time = current_time(data.timezone);
+    let (progs, time) = middleware(&data);
     web::Json(progs_by_time(&progs, time)) 
 }
 
@@ -53,16 +56,14 @@ fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time
 
 #[get("/next/{max}")]
 async fn next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
-    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();
-    let time = current_time(data.timezone);
+    let (progs, time) = middleware(&data);
     let max = path.into_inner();
     web::Json(progs_after(&progs, time, max)) 
 }
 
 #[get("/now-and-next/{max}")]
 async fn now_and_next(path: web::Path<usize>, data: web::Data<crate::AppState>) -> impl Responder  {
-    let progs: std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> = data.progs.lock().unwrap();  
-    let time = current_time(data.timezone);
+    let (progs, time) = middleware(&data);
     let max = path.into_inner();
     let mut response = progs_by_time(&progs, time);
     response.append(&mut progs_after(&progs, time, max-1));
