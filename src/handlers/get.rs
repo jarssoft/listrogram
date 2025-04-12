@@ -1,11 +1,6 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Utc};
-
-#[get("/list")]
-async fn index(data: web::Data<crate::AppState>) -> impl Responder {
-    let progs = data.progs.lock().unwrap();
-    web::Json((*progs).clone())
-}
+use std::ops::Range;
 
 fn current_time(timezoneopt: Option<i32>) -> NaiveTime {
     match timezoneopt {
@@ -44,10 +39,10 @@ fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time
         .collect::<Vec<(NaiveTime, String)>>()
 }
 
-fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime, end:NaiveTime) -> Vec<(NaiveTime, String)>{   
+fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time: Range<NaiveTime>) -> Vec<(NaiveTime, String)>{   
     progs
         .iter()
-        .filter(|x| x.0 >= time && x.0 <= end )
+        .filter(|x| x.0 >= time.start && x.0 <= time.end )
         .cloned()
         .collect::<Vec<(NaiveTime, String)>>()
 }
@@ -55,6 +50,12 @@ fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, ti
 
 fn middleware(data: &web::Data<crate::AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveTime) {
     (data.progs.lock().unwrap(), current_time(data.timezone))
+}
+
+#[get("/list")]
+async fn index(data: web::Data<crate::AppState>) -> impl Responder {
+    let progs = data.progs.lock().unwrap();
+    web::Json((*progs).clone())
 }
 
 #[get("/now")]
@@ -84,6 +85,6 @@ async fn now_and_soon(path: web::Path<i64>, data: web::Data<crate::AppState>) ->
     let (progs, time) = middleware(&data);
     let minutes = path.into_inner();   
     let mut response = progs_by_time(&progs, time); 
-    response.append(&mut progs_in_time(&progs, time, time + TimeDelta::try_minutes(minutes).unwrap()));
+    response.append(&mut progs_in_time(&progs, time..time + TimeDelta::try_minutes(minutes).unwrap()));
     web::Json(response) 
 }
