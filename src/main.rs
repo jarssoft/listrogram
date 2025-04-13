@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 pub mod handlers;
-pub mod utils;
 use handlers::{add, get, feed};
 use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 use serde::Serialize;
