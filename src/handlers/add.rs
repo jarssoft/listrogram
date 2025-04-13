@@ -17,7 +17,7 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
         let time = NaiveTime::parse_from_str(line1.1, "%0H:%0M");
         if time.is_err() {
             return format_error("Expected time string (%H:%M).", Some(line1));
-        }        
+        }
         if progs.last().is_some() && time.unwrap() < progs.last().unwrap().0 {            
             return format_error("Added time was before last time.", Some(line1));
         }
@@ -40,9 +40,7 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
 
 #[post("/addtext")]
 async fn addtext(data: web::Data<crate::AppState>, req_body: String) -> impl Responder {
-
-    let mut progs = data.progs.lock().unwrap(); // <- get counter's MutexGuard
-    
+    let mut progs = data.progs.lock().unwrap(); // <- get counter's MutexGuard    
     let res: Result<Vec<(NaiveTime, String)>, String> = parse_from_text(req_body);
     match res {
         Ok(value) => {
