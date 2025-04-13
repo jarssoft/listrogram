@@ -4,7 +4,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 pub mod handlers;
 pub mod utils;
-use handlers::{add, get};
+use handlers::{add, get, feed};
 use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 use serde::Serialize;
 
@@ -48,6 +48,7 @@ async fn main() -> std::io::Result<()> {
             .service(get::next)
             .service(get::now_and_next)
             .service(get::now_and_soon)
+            .service(feed::feed)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind((ip, 8080))?
