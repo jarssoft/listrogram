@@ -39,7 +39,7 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
 }
 
 #[post("/addtext")]
-async fn addtext(data: web::Data<crate::AppState>, req_body: String) -> impl Responder {
+async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Responder {
     let mut progs = data.progs.lock().unwrap(); // <- get counter's MutexGuard    
     let res: Result<Vec<(NaiveTime, String)>, String> = parse_from_text(req_body);
     match res {

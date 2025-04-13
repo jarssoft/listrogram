@@ -2,7 +2,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http::header;
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
 use std::ops::Range;
-use listagram::utils::progs::{progs_after, progs_by_time, current_dateime, progs_in_time};
+use crate::utils::progs::{progs_after, progs_by_time, current_dateime, progs_in_time};
 use super::middleware;
 
 pub const DAYPARTS: &[(&str, Range<u32>)] = &[
@@ -10,10 +10,10 @@ pub const DAYPARTS: &[(&str, Range<u32>)] = &[
     ("Aamu", 6..12), 
     ("Päivä", 12..17), 
     ("Ilta", 17..21), 
-    ("Myöhäis-ilta", 21..0)];
+    ("Myöhäis-ilta", 21..23)];
 
 #[get("/rss")]
-async fn feed(data: web::Data<crate::AppState>) -> impl Responder  {
+async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
     let (progs, time) = middleware(&data);    
     let currentpart = DAYPARTS.iter().find(|x| x.1.contains(&time.hour())).unwrap();   
     let response = progs_in_time(

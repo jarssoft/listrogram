@@ -15,7 +15,6 @@ pub fn current_time(timezoneopt: Option<i32>) -> NaiveTime {
 }
 
 pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime) -> Vec<(NaiveTime, String)>{
-    
     let now2 = progs
         .iter()
         .reduce(|x,y|{
