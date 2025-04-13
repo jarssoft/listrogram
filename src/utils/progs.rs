@@ -1,5 +1,3 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use actix_web::http::header;
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
 use std::ops::Range;
 
@@ -48,6 +46,3 @@ pub fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>
 }
 
 
-pub fn middleware(data: &web::Data<crate::AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveDateTime) {
-    (data.progs.lock().unwrap(), current_dateime(data.timezone))
-}
