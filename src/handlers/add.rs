@@ -34,6 +34,11 @@ fn parse_from_text(req_body: String) -> Result<Vec::<(NaiveTime, String)>, Strin
 
         progs.push((time.unwrap(), title.to_string().clone()));
     }
+
+    if progs.is_empty() {
+        return format_error("No programs added.", None);
+    }
+
     Ok(progs)   
 
 }
