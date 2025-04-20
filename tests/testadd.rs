@@ -3,14 +3,14 @@
 mod tests {
     use listagram::handlers::{add::addtext, *};
     use actix_web::{test, web, App};
-    use chrono::NaiveTime;
+    use chrono::{Local, NaiveTime};
 
     #[actix_web::test]
     async fn test_addtext_post_without_payload() {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
         ).await;
 
@@ -25,7 +25,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -41,7 +41,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -57,7 +57,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -73,7 +73,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -89,7 +89,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -105,7 +105,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -120,7 +120,7 @@ mod tests {
         let bytes = test::call_and_read_body(&app, req).await;        
         let str = std::str::from_utf8(&bytes).unwrap();
         assert!(str.eq("[[\"15:20:00\",\"Efter Nio\"],[\"16:20:00\",\"Elossa 24h\"]]"));
-        print!("resp = '{}'", str);
+        println!("resp = '{}'", str);
     }
 
     #[actix_web::test] 
@@ -128,7 +128,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(None)))
+                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
                 .service(addtext),
             ).await;
 
@@ -136,8 +136,9 @@ mod tests {
         let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
  
         let resp: Vec<(NaiveTime, String)> = test::call_and_read_body_json(&app, req).await;
-        print!("resp = '{:?}'", resp);
+        println!("resp = '{:?}'", resp);
         assert!(resp.len()==2);
+        
     }
 
 }

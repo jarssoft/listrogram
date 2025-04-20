@@ -1,17 +1,35 @@
-use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
+use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike};
 use std::ops::Range;
+use crate::handlers::TimeFormat;
+//#[cfg(test)]
+//use crate::utils::test_chrono::Utc;
+//#[cfg(not(test))]
+use chrono::Utc;
 
-pub fn current_dateime(timezoneopt: Option<i32>) -> NaiveDateTime {
-    match timezoneopt {
-        Some(timezone) => {
-            let tz_offset = FixedOffset::east_opt(timezone).unwrap();
+pub fn current_datetime(timeformat: &TimeFormat) -> NaiveDateTime {
+    match timeformat {
+        TimeFormat::Timezone(timezone) => {
+            let tz_offset = FixedOffset::east_opt(*timezone).unwrap();
             tz_offset.from_utc_datetime(&Utc::now().naive_utc()).naive_local()}
-        None => Local::now().naive_local()
+        TimeFormat::Local() => {
+            let utc = Utc::now();
+            //let local = Local::now();
+            let converted: DateTime<Local> = DateTime::from(utc);
+            print!("Local is {}",converted.naive_local());
+            converted.naive_local()
+            //Local::now().naive_local()
+        }
+        TimeFormat::FixedTime(hour, min) => {
+            let date  = NaiveDate::from_ymd_opt(2015, 1, 1).unwrap();
+            let time = NaiveTime::from_hms_opt((*hour).try_into().unwrap(), (*min).try_into().unwrap(), 0).unwrap();
+            NaiveDateTime::new(date, time)
+            
+        }
     }
 }
 
-pub fn current_time(timezoneopt: Option<i32>) -> NaiveTime {
-    current_dateime(timezoneopt).time()
+pub fn current_time(timeformat: &TimeFormat) -> NaiveTime {
+    current_datetime(timeformat).time()
 }
 
 pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime) -> Vec<(NaiveTime, String)>{

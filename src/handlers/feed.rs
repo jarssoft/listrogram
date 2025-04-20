@@ -2,7 +2,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http::header;
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
 use std::ops::Range;
-use crate::utils::progs::{progs_after, progs_by_time, current_dateime, progs_in_time};
+use crate::utils::progs::{progs_after, progs_by_time, current_datetime, progs_in_time};
 use super::middleware;
 
 pub const DAYPARTS: &[(&str, Range<u32>)] = &[

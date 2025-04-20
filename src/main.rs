@@ -1,7 +1,7 @@
 use std::env;
 use std::collections::HashMap;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use listagram::handlers::{add, get, feed};
+use listagram::handlers::{add, feed, get, TimeFormat};
 use listagram::handlers::build_appdata;
 
 #[actix_web::main]
@@ -14,8 +14,13 @@ async fn main() -> std::io::Result<()> {
     };
     
     // Note: web::Data created _outside_ HttpServer::new closure
+    let timeformat = match vars.get("TIMEZONE") {
+        Some(p) => TimeFormat::Timezone(p.parse::<i32>().unwrap()),
+        None => TimeFormat::Local(),
+    };
+
     let appdata = web::Data::new(
-            build_appdata(vars.get("TIMEZONE").map(|v| v.parse::<i32>().unwrap()))
+            build_appdata(timeformat)
     );
 
     HttpServer::new(move || {
