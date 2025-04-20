@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(appdata.clone()) // <- register the created data
             .service(add::addtext)
-            .service(get::index)
+            .service(get::list)
             .service(get::now)
             .service(get::next)
             .service(get::now_and_next)

@@ -12,6 +12,7 @@
 | 11.4. | 1    | Palautus JSON-muotoon |
 | 11.4. | 1    | Lisää mahdollisuus säätää aikavyöhykettä palvelinta varten |
 | 13.4. | 3    | Lisää atom-syöte |
+| 20.4. | 4    | Lisäsin automaattisen testauksen backendiin. |
 
 Aikaa käytetty: 32 h
 Aikatavoie: 175 h

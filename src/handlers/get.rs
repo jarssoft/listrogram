@@ -4,7 +4,7 @@ use crate::utils::progs::{progs_after, progs_by_time, current_dateime, progs_in_
 use super::middleware;
 
 #[get("/list")]
-async fn index(data: web::Data<super::AppState>) -> impl Responder {
+async fn list(data: web::Data<super::AppState>) -> impl Responder {
     let progs = data.progs.lock().unwrap();
     web::Json((*progs).clone())
 }
