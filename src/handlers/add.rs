@@ -1,7 +1,6 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{Local, Utc, DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use super::middleware;
-use super::current_datetime;
 
 fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveDateTime, String)>, String> {
     if let Some(line) = oline {
@@ -50,9 +49,9 @@ fn parse_from_text(date: NaiveDate, req_body: String) -> Result<Vec::<(NaiveDate
 
 #[post("/addtext")]
 async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Responder {
-    let (mut progs, time) = middleware(&data);
+    let (mut progs, datetime) = middleware(&data);
 
-    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(time.date(), req_body);
+    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(datetime.date(), req_body);
     match res {
         Ok(value) => {
             *progs=value.clone(); 

@@ -36,10 +36,6 @@ pub fn current_datetime(timepolicy: &TimePolicy) -> NaiveDateTime {
     }
 }
 
-//pub fn current_time(timeformat: &TimePolicy) -> NaiveTime {
-    //current_datetime(timeformat).time()
-//}
-
 pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>>, time:NaiveDateTime) -> Vec<(NaiveDateTime, String)>{
     let now2 = progs
         .iter()

@@ -1,8 +1,8 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http::header;
-use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
+use chrono::{NaiveDateTime, NaiveTime, Timelike};
 use std::ops::Range;
-use crate::utils::progs::{progs_after, progs_by_time, current_datetime, progs_in_time};
+use crate::utils::progs::progs_in_time;
 use super::middleware;
 
 pub const DAYPARTS: &[(&str, Range<u32>)] = &[
@@ -14,16 +14,16 @@ pub const DAYPARTS: &[(&str, Range<u32>)] = &[
 
 #[get("/feed")]
 async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
-    let (progs, time) = middleware(&data);    
-    let currentpart = DAYPARTS.iter().find(|x| x.1.contains(&time.hour())).unwrap();   
+    let (progs, datetime) = middleware(&data);    
+    let currentpart = DAYPARTS.iter().find(|x| x.1.contains(&datetime.hour())).unwrap();   
     let response = progs_in_time(
             &progs, 
-            NaiveDateTime::new(time.date(),NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap())..
-            NaiveDateTime::new(time.date(),NaiveTime::from_hms_opt(currentpart.1.end, 0, 0).unwrap())
+            NaiveDateTime::new(datetime.date(),NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap())..
+            NaiveDateTime::new(datetime.date(),NaiveTime::from_hms_opt(currentpart.1.end, 0, 0).unwrap())
         );    
     
     let start_of_part = NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap();
-    let pubtime = time.format("%Y-%m-%dT").to_string()+&start_of_part.format("%H:%M:%SZ").to_string();
+    let pubtime = datetime.format("%Y-%m-%dT").to_string()+&start_of_part.format("%H:%M:%SZ").to_string();
 
     let haiku = format!("\
         <?xml version=\"1.0\" encoding=\"utf-8\"?>
@@ -42,7 +42,7 @@ async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
         </feed>",
         pubtime,
         pubtime, 
-        time.date().to_string(),
+        datetime.date().to_string(),
         currentpart.0,      
         pubtime,   
         format!("{}", response.iter().map(|p|format!("&lt;p&gt;{} {}&lt;/p&gt;", p.0, p.1.replace("&", "&amp;"))).collect::<Vec<String>>().join("")),

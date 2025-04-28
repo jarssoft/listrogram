@@ -3,7 +3,7 @@
 mod tests {
     use listagram::handlers::{add::addtext, *};
     use actix_web::{test, web, App};
-    use chrono::{Local, NaiveDateTime};
+    use chrono::NaiveDateTime;
     use listagram::utils::progs::TimePolicy;
 
     #[actix_web::test]
@@ -101,6 +101,23 @@ mod tests {
     }
 
     #[actix_web::test] 
+    async fn test_addtext_response_json_is_correct() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtext),
+            ).await;
+
+        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
+ 
+        let resp: Vec<(NaiveDateTime, String)> = test::call_and_read_body_json(&app, req).await;
+        println!("resp = '{:?}'", resp);
+        assert!(resp.len()==2);
+    }
+
+    #[actix_web::test] 
     async fn test_addtext_response_is_exact() {
 
         let app = test::init_service(
@@ -121,23 +138,6 @@ mod tests {
         let str = std::str::from_utf8(&bytes).unwrap();
         assert!(str.eq("[[\"2025-04-28T15:20:00\",\"Efter Nio\"],[\"2025-04-28T16:20:00\",\"Elossa 24h\"]]"));
         println!("resp = '{}'", str);
-    }
-
-    #[actix_web::test] 
-    async fn test_addtext_response_json_is_correct() {
-
-        let app = test::init_service(
-            App::new()
-                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
-                .service(addtext),
-            ).await;
-
-        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
-        let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
- 
-        let resp: Vec<(NaiveDateTime, String)> = test::call_and_read_body_json(&app, req).await;
-        println!("resp = '{:?}'", resp);
-        assert!(resp.len()==2);
     }
 
 }
