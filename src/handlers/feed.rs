@@ -39,7 +39,7 @@ async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
         </entry>
         </feed>",        
         datetime.date().to_string(),
-        format!("klo {}–{}",currentpart.start,currentpart.end),
+        format!("klo {:0>2}–{:0>2}", currentpart.start, currentpart.end % 24),
         format!("{}", response
                 .iter()
                 .map(|p|format!(
