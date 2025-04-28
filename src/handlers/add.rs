@@ -53,11 +53,17 @@ async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Res
 
     let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(datetime.date(), req_body);
     match res {
-        Ok(value) => {
-            *progs=value.clone(); 
+        Ok(mut newprogs) => {
+            let valuecopy=Vec::from(newprogs.clone());
+            if !(*progs).is_empty() {                
+                if (*progs).last().unwrap().0 > newprogs.first().unwrap().0 {
+                    return HttpResponse::BadRequest().body("Error. Days most be addded by order.");
+                }
+            }
+            (*progs).append(&mut newprogs); 
             //HttpResponse::Ok().body(format!{"{value:?}"})
             //web::Json(value)
-            let json = web::Json(value);
+            let json = web::Json(valuecopy);
             HttpResponse::Ok().json(json)
         },
         Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
@@ -71,10 +77,16 @@ async fn addtextdate(path: web::Path<String>, data: web::Data<super::AppState>, 
     let date = NaiveDate::parse_from_str(path.into_inner().as_str(), "%Y-%m-%d").unwrap();
 
     let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(date, req_body);
-    match res {
-        Ok(value) => {
-            *progs=value.clone(); 
-            let json = web::Json(value);
+    match res {        
+        Ok(mut newprogs) => {
+            let valuecopy=Vec::from(newprogs.clone());            
+            if !(*progs).is_empty() {                
+                if (*progs).last().unwrap().0 > newprogs.first().unwrap().0 {
+                    return HttpResponse::BadRequest().body("Error. Days most be addded by order.");
+                }
+            }
+            (*progs).append(&mut newprogs); 
+            let json = web::Json(valuecopy);
             HttpResponse::Ok().json(json)
         },
         Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),

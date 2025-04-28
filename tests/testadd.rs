@@ -162,5 +162,30 @@ mod tests {
         assert!(str.eq("[[\"2025-04-29T15:20:00\",\"Efter Nio\"],[\"2025-04-29T16:20:00\",\"Elossa 24h\"]]"));
         println!("resp = '{}'", str);
     }
+    
+    #[actix_web::test] 
+    async fn test_addtextdate_days_must_be_added_by_order() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtextdate),
+            ).await;
+
+        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtextdate/2025-04-29").set_payload(payload).to_request();
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());    
+
+        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtextdate/2025-04-30").set_payload(payload).to_request();
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());  
+
+        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtextdate/2025-04-28").set_payload(payload).to_request();
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_client_error());
+    }
 
 }
