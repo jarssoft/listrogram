@@ -3,13 +3,14 @@
 mod tests {
     use listagram::handlers::{add::addtext, get::{list, now}, *};
     use actix_web::{test, web, App};
+    use listagram::utils::progs::TimePolicy;
 
     #[actix_web::test] 
     async fn test_get_correct() {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local()))) 
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive()))) 
                 .service(list),
             ).await;
 
@@ -23,7 +24,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(list)
                 .service(addtext),
             ).await;
@@ -43,7 +44,7 @@ mod tests {
     async fn test_get_now() {
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::FixedTime(14, 10))))
+                .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(14, 10))))
                 .service(now)
                 .service(addtext),
             ).await;

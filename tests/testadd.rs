@@ -4,13 +4,14 @@ mod tests {
     use listagram::handlers::{add::addtext, *};
     use actix_web::{test, web, App};
     use chrono::{Local, NaiveTime};
+    use listagram::utils::progs::TimePolicy;
 
     #[actix_web::test]
     async fn test_addtext_post_without_payload() {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
         ).await;
 
@@ -25,7 +26,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -41,7 +42,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -57,7 +58,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -73,7 +74,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -89,7 +90,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -105,7 +106,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 
@@ -128,7 +129,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimeFormat::Local())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
                 .service(addtext),
             ).await;
 

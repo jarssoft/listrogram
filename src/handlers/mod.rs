@@ -3,22 +3,16 @@ use crate::utils::progs::{progs_after, progs_by_time, current_datetime, progs_in
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike, Utc};
 use serde::Serialize;
 use std::sync::Mutex;
-
-#[derive(Serialize)]
-pub enum TimeFormat {
-    Local(),
-    Timezone(i32),
-    FixedTime(i8,i8),
-}
+use crate::utils::progs::TimePolicy;
 
 #[derive(Serialize)]
 pub struct AppState {
     pub progs: Mutex<Vec::<(NaiveTime, String)>>, // <- Mutex is necessary to mutate safely across threads
-    pub timeformat: TimeFormat,
+    pub timeformat: TimePolicy,
 }
 
 // Note: web::Data created _outside_ HttpServer::new closure
-pub fn build_appdata(timeformat: TimeFormat) -> AppState{
+pub fn build_appdata(timeformat: TimePolicy) -> AppState{
     AppState {
         progs: Mutex::new(Vec::new()),
         timeformat

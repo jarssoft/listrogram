@@ -1,17 +1,21 @@
 use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeDelta, TimeZone, Timelike};
 use std::ops::Range;
-use crate::handlers::TimeFormat;
-//#[cfg(test)]
-//use crate::utils::test_chrono::Utc;
-//#[cfg(not(test))]
 use chrono::Utc;
+use serde::Serialize;
 
-pub fn current_datetime(timeformat: &TimeFormat) -> NaiveDateTime {
-    match timeformat {
-        TimeFormat::Timezone(timezone) => {
-            let tz_offset = FixedOffset::east_opt(*timezone).unwrap();
-            tz_offset.from_utc_datetime(&Utc::now().naive_utc()).naive_local()}
-        TimeFormat::Local() => {
+#[derive(Serialize)]
+pub enum TimePolicy {
+    ///Use localtime
+    Naive(),
+    ///Specify a fixed timezone
+    Timezone(i32),
+    ///Use fixed time for testing
+    FixedTime(i8, i8),
+}
+
+pub fn current_datetime(timepolicy: &TimePolicy) -> NaiveDateTime {
+    match timepolicy {
+        TimePolicy::Naive() => {
             let utc = Utc::now();
             //let local = Local::now();
             let converted: DateTime<Local> = DateTime::from(utc);
@@ -19,7 +23,11 @@ pub fn current_datetime(timeformat: &TimeFormat) -> NaiveDateTime {
             converted.naive_local()
             //Local::now().naive_local()
         }
-        TimeFormat::FixedTime(hour, min) => {
+        TimePolicy::Timezone(timezone) => {
+            let tz_offset = FixedOffset::east_opt(*timezone).unwrap();
+            tz_offset.from_utc_datetime(&Utc::now().naive_utc()).naive_local()
+        }
+        TimePolicy::FixedTime(hour, min) => {
             let date  = NaiveDate::from_ymd_opt(2015, 1, 1).unwrap();
             let time = NaiveTime::from_hms_opt((*hour).try_into().unwrap(), (*min).try_into().unwrap(), 0).unwrap();
             NaiveDateTime::new(date, time)
@@ -28,7 +36,7 @@ pub fn current_datetime(timeformat: &TimeFormat) -> NaiveDateTime {
     }
 }
 
-pub fn current_time(timeformat: &TimeFormat) -> NaiveTime {
+pub fn current_time(timeformat: &TimePolicy) -> NaiveTime {
     current_datetime(timeformat).time()
 }
 

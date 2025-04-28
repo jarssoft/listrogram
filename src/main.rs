@@ -1,8 +1,9 @@
 use std::env;
 use std::collections::HashMap;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use listagram::handlers::{add, feed, get, TimeFormat};
+use listagram::handlers::{add, feed, get};
 use listagram::handlers::build_appdata;
+use listagram::utils::progs::TimePolicy;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -13,10 +14,10 @@ async fn main() -> std::io::Result<()> {
         None => "127.0.0.1",
     };
     
-    // Note: web::Data created _outside_ HttpServer::new closure
+    // Use environment variable TIMEZONE=10800 to set fixed timezone in Finland
     let timeformat = match vars.get("TIMEZONE") {
-        Some(p) => TimeFormat::Timezone(p.parse::<i32>().unwrap()),
-        None => TimeFormat::Local(),
+        Some(p) => TimePolicy::Timezone(p.parse::<i32>().unwrap()),
+        None => TimePolicy::Naive(),
     };
 
     let appdata = web::Data::new(
