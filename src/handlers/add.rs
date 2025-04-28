@@ -1,57 +1,10 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, HttpResponse, Responder};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use super::middleware;
+use crate::utils::parser::parse_from_text;
 
-fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveDateTime, String)>, String> {
-    if let Some(line) = oline {
-        Err(format!("Error in line {} ('{}'): {}", line.0+1, line.1, msg))
-    }else{
-        Err(format!("Error: {}", msg))
-    }
-}
-
-fn parse_from_text(date: NaiveDate, req_body: String) -> Result<Vec::<(NaiveDateTime, String)>, String> {
-    let mut progs: Vec::<(NaiveDateTime, String)> = Vec::new();
-    let mut lines = req_body.lines().enumerate();
-
-    while let Some(line1) = lines.next() {    
-        let time = NaiveTime::parse_from_str(line1.1, "%0H:%0M");
-        
-        if time.is_err() {
-            return format_error("Expected time string (%H:%M).", Some(line1));
-        }
-        let datetime = NaiveDateTime::new(date, time.unwrap());
-
-        if progs.last().is_some() && datetime < progs.last().unwrap().0 {            
-            return format_error("Added time was before last time.", Some(line1));
-        }
-
-        let nextline = lines.next();
-        if nextline.is_none(){
-            return format_error("Found end of file, expected program title.", nextline);
-        }
-
-        let title = nextline.unwrap().1;           
-        if title.is_empty() {
-            return format_error("Program title must be longer than 0.", nextline);
-        }
-
-        progs.push((datetime, title.to_string().clone()));
-    }
-
-    if progs.is_empty() {
-        return format_error("No programs added.", None);
-    }
-
-    Ok(progs)   
-
-}
-
-#[post("/addtext")]
-async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Responder {
-    let (mut progs, datetime) = middleware(&data);
-
-    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(datetime.date(), req_body);
+fn add(progs:&mut Vec<(NaiveDateTime, String)>, date: &NaiveDate, req_body: &String) -> impl Responder {
+    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(*date, req_body);
     match res {
         Ok(mut newprogs) => {
             let valuecopy=Vec::from(newprogs.clone());
@@ -61,8 +14,7 @@ async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Res
                 }
             }
             (*progs).append(&mut newprogs); 
-            //HttpResponse::Ok().body(format!{"{value:?}"})
-            //web::Json(value)
+
             let json = web::Json(valuecopy);
             HttpResponse::Ok().json(json)
         },
@@ -70,25 +22,15 @@ async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Res
     }
 }
 
+#[post("/addtext")]
+async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Responder {
+    let (mut progs, datetime) = middleware(&data);
+    add(&mut progs, &datetime.date(), &req_body)
+}
+
 #[post("/addtextdate/{date}")]
 async fn addtextdate(path: web::Path<String>, data: web::Data<super::AppState>, req_body: String) -> impl Responder {
     let (mut progs, _) = middleware(&data);
-    
     let date = NaiveDate::parse_from_str(path.into_inner().as_str(), "%Y-%m-%d").unwrap();
-
-    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(date, req_body);
-    match res {        
-        Ok(mut newprogs) => {
-            let valuecopy=Vec::from(newprogs.clone());            
-            if !(*progs).is_empty() {                
-                if (*progs).last().unwrap().0 > newprogs.first().unwrap().0 {
-                    return HttpResponse::BadRequest().body("Error. Days most be addded by order.");
-                }
-            }
-            (*progs).append(&mut newprogs); 
-            let json = web::Json(valuecopy);
-            HttpResponse::Ok().json(json)
-        },
-        Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
-    }
+    add(&mut progs, &date, &req_body)
 }
