@@ -63,3 +63,20 @@ async fn addtext(data: web::Data<super::AppState>, req_body: String) -> impl Res
         Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
     }
 }
+
+#[post("/addtextdate/{date}")]
+async fn addtextdate(path: web::Path<String>, data: web::Data<super::AppState>, req_body: String) -> impl Responder {
+    let (mut progs, _) = middleware(&data);
+    
+    let date = NaiveDate::parse_from_str(path.into_inner().as_str(), "%Y-%m-%d").unwrap();
+
+    let res: Result<Vec<(NaiveDateTime, String)>, String> = parse_from_text(date, req_body);
+    match res {
+        Ok(value) => {
+            *progs=value.clone(); 
+            let json = web::Json(value);
+            HttpResponse::Ok().json(json)
+        },
+        Err(error) => HttpResponse::BadRequest().body(format!{"{error:?}"}),
+    }
+}

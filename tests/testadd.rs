@@ -1,7 +1,7 @@
 #[cfg(test)]
 
 mod tests {
-    use listagram::handlers::{add::addtext, *};
+    use listagram::handlers::{add::addtext, add::addtextdate, *};
     use actix_web::{test, web, App};
     use chrono::NaiveDateTime;
     use listagram::utils::progs::TimePolicy;
@@ -122,7 +122,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-            .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(2025, 4, 28, 14, 10))))
+                .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(2025, 4, 28, 14, 10))))
                 .service(addtext),
             ).await;
 
@@ -137,6 +137,29 @@ mod tests {
         let bytes = test::call_and_read_body(&app, req).await;        
         let str = std::str::from_utf8(&bytes).unwrap();
         assert!(str.eq("[[\"2025-04-28T15:20:00\",\"Efter Nio\"],[\"2025-04-28T16:20:00\",\"Elossa 24h\"]]"));
+        println!("resp = '{}'", str);
+    }
+
+    #[actix_web::test] 
+    async fn test_addtextdate_response_is_exact() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtextdate),
+            ).await;
+
+        let payload ="15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtextdate/2025-04-29").set_payload(payload).to_request();
+
+        /*
+        let resp = test::call_service(&app, req).await;        
+        let bytes = actix_web::body::to_bytes(resp.into_body()).await.unwrap();
+        */
+
+        let bytes = test::call_and_read_body(&app, req).await;        
+        let str = std::str::from_utf8(&bytes).unwrap();
+        assert!(str.eq("[[\"2025-04-29T15:20:00\",\"Efter Nio\"],[\"2025-04-29T16:20:00\",\"Elossa 24h\"]]"));
         println!("resp = '{}'", str);
     }
 
