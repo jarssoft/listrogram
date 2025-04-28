@@ -61,7 +61,7 @@ pub fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)
 pub fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>>, time: Range<NaiveDateTime>) -> Vec<(NaiveDateTime, String)>{   
     progs
         .iter()
-        .filter(|x| x.0 >= time.start && x.0 <= time.end )
+        .filter(|x| x.0 >= time.start && x.0 < time.end )
         .cloned()
         .collect::<Vec<(NaiveDateTime, String)>>()
 }
