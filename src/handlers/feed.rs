@@ -12,14 +12,14 @@ pub const DAYPARTS: &[(&str, Range<u32>)] = &[
     ("Ilta", 17..21), 
     ("Myöhäis-ilta", 21..23)];
 
-#[get("/rss")]
+#[get("/feed")]
 async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
     let (progs, time) = middleware(&data);    
     let currentpart = DAYPARTS.iter().find(|x| x.1.contains(&time.hour())).unwrap();   
     let response = progs_in_time(
             &progs, 
-            NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap()..
-            NaiveTime::from_hms_opt(currentpart.1.end, 0, 0).unwrap()
+            NaiveDateTime::new(time.date(),NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap())..
+            NaiveDateTime::new(time.date(),NaiveTime::from_hms_opt(currentpart.1.end, 0, 0).unwrap())
         );    
     
     let start_of_part = NaiveTime::from_hms_opt(currentpart.1.start, 0, 0).unwrap();

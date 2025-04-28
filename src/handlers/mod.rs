@@ -7,7 +7,7 @@ use crate::utils::progs::TimePolicy;
 
 #[derive(Serialize)]
 pub struct AppState {
-    pub progs: Mutex<Vec::<(NaiveTime, String)>>, // <- Mutex is necessary to mutate safely across threads
+    pub progs: Mutex<Vec::<(NaiveDateTime, String)>>, // <- Mutex is necessary to mutate safely across threads
     pub timeformat: TimePolicy,
 }
 
@@ -19,7 +19,7 @@ pub fn build_appdata(timeformat: TimePolicy) -> AppState{
     }
 }
 
-pub fn middleware(data: &web::Data<AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>> , NaiveDateTime) {
+pub fn middleware(data: &web::Data<AppState>) -> (std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>> , NaiveDateTime) {
     (data.progs.lock().unwrap(), current_datetime(&data.timeformat))
 }
 

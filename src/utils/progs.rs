@@ -10,7 +10,7 @@ pub enum TimePolicy {
     ///Specify a fixed timezone
     Timezone(i32),
     ///Use fixed time for testing
-    FixedTime(i8, i8),
+    FixedTime(i32, u32, u32, i8, i8),
 }
 
 pub fn current_datetime(timepolicy: &TimePolicy) -> NaiveDateTime {
@@ -27,8 +27,8 @@ pub fn current_datetime(timepolicy: &TimePolicy) -> NaiveDateTime {
             let tz_offset = FixedOffset::east_opt(*timezone).unwrap();
             tz_offset.from_utc_datetime(&Utc::now().naive_utc()).naive_local()
         }
-        TimePolicy::FixedTime(hour, min) => {
-            let date  = NaiveDate::from_ymd_opt(2015, 1, 1).unwrap();
+        TimePolicy::FixedTime(year, month, day, hour, min) => {
+            let date  = NaiveDate::from_ymd_opt(*year, *month, *day).unwrap();
             let time = NaiveTime::from_hms_opt((*hour).try_into().unwrap(), (*min).try_into().unwrap(), 0).unwrap();
             NaiveDateTime::new(date, time)
             
@@ -36,11 +36,11 @@ pub fn current_datetime(timepolicy: &TimePolicy) -> NaiveDateTime {
     }
 }
 
-pub fn current_time(timeformat: &TimePolicy) -> NaiveTime {
-    current_datetime(timeformat).time()
-}
+//pub fn current_time(timeformat: &TimePolicy) -> NaiveTime {
+    //current_datetime(timeformat).time()
+//}
 
-pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime) -> Vec<(NaiveTime, String)>{
+pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>>, time:NaiveDateTime) -> Vec<(NaiveDateTime, String)>{
     let now2 = progs
         .iter()
         .reduce(|x,y|{
@@ -53,21 +53,21 @@ pub fn progs_by_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>
     }
 }
 
-pub fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time:NaiveTime, max:usize) -> Vec<(NaiveTime, String)>{   
+pub fn progs_after(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>>, time:NaiveDateTime, max:usize) -> Vec<(NaiveDateTime, String)>{   
     progs
         .iter()
         .filter(|x| x.0 > time)
         .take(max)
         .cloned()
-        .collect::<Vec<(NaiveTime, String)>>()
+        .collect::<Vec<(NaiveDateTime, String)>>()
 }
 
-pub fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveTime, String)>>, time: Range<NaiveTime>) -> Vec<(NaiveTime, String)>{   
+pub fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, String)>>, time: Range<NaiveDateTime>) -> Vec<(NaiveDateTime, String)>{   
     progs
         .iter()
         .filter(|x| x.0 >= time.start && x.0 <= time.end )
         .cloned()
-        .collect::<Vec<(NaiveTime, String)>>()
+        .collect::<Vec<(NaiveDateTime, String)>>()
 }
 
 

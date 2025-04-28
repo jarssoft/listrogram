@@ -36,7 +36,7 @@ mod tests {
         let reqget = test::TestRequest::get().uri("/list").to_request();
         let bytes = test::call_and_read_body(&app, reqget).await;        
         let str = std::str::from_utf8(&bytes).unwrap();
-        assert!(str.eq("[[\"15:20:00\",\"Efter Nio\"],[\"16:20:00\",\"Elossa 24h\"]]"));
+        assert!(str.eq("[[\"2025-04-28T15:20:00\",\"Efter Nio\"],[\"2025-04-28T16:20:00\",\"Elossa 24h\"]]"));
         print!("resp = '{}'", str);
     }
 
@@ -44,7 +44,7 @@ mod tests {
     async fn test_get_now() {
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(14, 10))))
+                .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(2025, 4, 28, 14, 10))))
                 .service(now)
                 .service(addtext),
             ).await;
@@ -56,7 +56,7 @@ mod tests {
         let reqget = test::TestRequest::get().uri("/now").to_request();
         let bytes = test::call_and_read_body(&app, reqget).await;        
         let str = std::str::from_utf8(&bytes).unwrap();
-        assert!(str.eq("[[\"14:00:00\",\"Efter Nio2\"]]"));
+        assert!(str.eq("[[\"2025-04-28T14:00:00\",\"Efter Nio2\"]]"));
         println!("now = '{}'", str);
     }
     
