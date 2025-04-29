@@ -24,7 +24,7 @@ mod tests {
 
         let app = test::init_service(
             App::new()
-                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .app_data(web::Data::new(build_appdata(TimePolicy::FixedTime(2025, 4, 28, 14, 10))))
                 .service(list)
                 .service(addtext),
             ).await;
@@ -40,7 +40,7 @@ mod tests {
         print!("resp = '{}'", str);
     }
 
-    #[actix_web::test] 
+    #[actix_web::test]  
     async fn test_get_now() {
         let app = test::init_service(
             App::new()

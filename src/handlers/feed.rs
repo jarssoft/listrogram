@@ -11,19 +11,21 @@ pub const DAYPARTS: &[Range<u32>] = &[1..6, 6..12, 12..17, 17..21, 21..25];
 async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
     let (progs, datetime) = middleware(&data);    
     
-    let hour = if datetime.hour() >= DAYPARTS[0].start {datetime.hour()} else {datetime.hour()+24};
-    let currentpart = DAYPARTS.iter().find(|x| x.contains(&hour)).unwrap(); 
+    let movinghours = if datetime.hour() >= DAYPARTS[0].start {0} else {24};
+    let currentpart = DAYPARTS.iter().find(|x| x.contains(&(datetime.hour()+movinghours))).unwrap(); 
 
-    let start = NaiveDateTime::new(datetime.date(),NaiveTime::from_hms_opt(currentpart.start, 0, 0).unwrap());
+    let start = NaiveDateTime::new(
+            datetime.date() - TimeDelta::hours(movinghours as i64),
+            NaiveTime::from_hms_opt(currentpart.start, 0, 0).unwrap()
+        );
+
     let response = progs_in_time(
-            &progs, 
-            start..start + TimeDelta::hours((currentpart.end - currentpart.start) as i64)
+            &progs, start..start + TimeDelta::hours((currentpart.end - currentpart.start) as i64)
         );    
     
-    let start_of_part = NaiveTime::from_hms_opt(currentpart.start, 0, 0).unwrap();
-    let pubtime = datetime.format("%Y-%m-%dT").to_string()+&start_of_part.format("%H:%M:%SZ").to_string();
+    let pubtime = start.format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
-    let haiku = format!("\
+    let xml = format!("\
         <?xml version=\"1.0\" encoding=\"utf-8\"?>
         <feed xmlns=\"http://www.w3.org/2005/Atom\">
         <id>urn:uuid:553e4df4-6e6c-11da-be05-000461723b33</id>
@@ -38,7 +40,7 @@ async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
             <link href=\"http://example.org/blog/{}\"/>
         </entry>
         </feed>",        
-        datetime.date().to_string(),
+        start.date().to_string(),
         format!("klo {:0>2}–{:0>2}", currentpart.start, currentpart.end % 24),
         format!("{}", response
                 .iter()
@@ -50,5 +52,5 @@ async fn feed(data: web::Data<super::AppState>) -> impl Responder  {
                 .join("")),
         pubtime);
 
-    HttpResponse::Ok().content_type(header::ContentType::xml()).body(haiku)
+    HttpResponse::Ok().content_type(header::ContentType::xml()).body(xml)
 }
