@@ -65,5 +65,3 @@ pub fn progs_in_time(progs: &std::sync::MutexGuard<'_, Vec<(NaiveDateTime, Strin
         .cloned()
         .collect::<Vec<(NaiveDateTime, String)>>()
 }
-
-

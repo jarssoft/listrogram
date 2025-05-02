@@ -35,6 +35,7 @@ async fn main() -> std::io::Result<()> {
             .service(get::now_and_next)
             .service(get::now_and_soon)
             .service(feed::feed)
+            //.service(feed::day)
     })
     .bind((ip, 8080))?
     .run()
