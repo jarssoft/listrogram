@@ -1,8 +1,8 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use chrono::TimeDelta;
-use crate::utils::progs::{progs_after, progs_by_time, progs_in_time};
+use chrono::{NaiveDate, NaiveDateTime, TimeDelta};
+use crate::utils::{dayparts::to_date, progs::{progs_after, progs_by_time, progs_in_time}};
 use super::middleware;
-use crate::utils::dayparts::progs_in_day_part;
+use crate::utils::dayparts::{progs_in_day_part};
 
 #[get("/list")]
 async fn list(data: web::Data<super::AppState>) -> impl Responder {
@@ -41,9 +41,17 @@ async fn now_and_soon(path: web::Path<i64>, data: web::Data<super::AppState>) ->
     web::Json(response) 
 }
 
-#[get("/day")]
-async fn day(data: web::Data<super::AppState>) -> impl Responder {
+#[get("/today")]
+async fn today(data: web::Data<super::AppState>) -> impl Responder {
     let (progs, datetime) = middleware(&data); 
-    let result = progs_in_day_part(&progs, &datetime);    
+    let result = progs_in_day_part(&progs, &to_date(&datetime));  
+    web::Json(result.clone())
+}
+
+#[get("/day/{date}")]
+async fn day(path: web::Path<NaiveDate>, data: web::Data<super::AppState>) -> impl Responder {
+    let (progs, _) = middleware(&data); 
+    let date = path.into_inner();    
+    let result = progs_in_day_part(&progs, &date);  
     web::Json(result.clone())
 }

@@ -34,6 +34,7 @@ async fn main() -> std::io::Result<()> {
             .service(get::next)
             .service(get::now_and_next)
             .service(get::now_and_soon)
+            .service(get::today)  
             .service(get::day)            
             .service(feed::feed)
             //.service(feed::day)
