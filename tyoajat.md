@@ -15,6 +15,8 @@
 | 20.4. | 5    | Lisäsin automaattisen testauksen backendiin. |
 | 28.4. | 5    | Ohjelmia voi nyt lisätä erikseen kullekin päivälle. |
 | 28.4. | 1    | Korjaa syötteen bugit ja lisää testi. |
+| 3.5.  | 5    | Päiväositus (dayparting) näkyy nyt päivälistauksessa . |
+| 6.5.  | 3    | Salli päivämäärät ja tyhjät rivit tekstimuotoisessa ohjelmatiedossa. |
 
-Aikaa käytetty: 42 h
+Aikaa käytetty: 45 h
 Aikatavoie: 175 h

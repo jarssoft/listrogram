@@ -188,4 +188,58 @@ mod tests {
         assert!(resp.status().is_client_error());
     }
 
+
+    // adding with date and empty lines
+
+    #[actix_web::test] 
+    async fn test_addtext_date_post_correct() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtext),
+            ).await;
+
+        let payload ="2025-05-06\n15:20\nEfter Nio\n16:20\nElossa 24h\n2025-05-07\n11:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+    }
+
+    #[actix_web::test] 
+    async fn test_addtext_with_empty_lines_post_correct() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtext),
+            ).await;
+
+        let payload ="2025-05-06\n\n15:20\nEfter Nio\n16:20\nElossa 24h\n\n2025-05-07\n\n11:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+    }
+
+    #[actix_web::test] 
+    async fn test_addtext_date_response_is_exact() {
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(build_appdata(TimePolicy::Naive())))
+                .service(addtext),
+            ).await;
+
+        let payload ="2025-05-05\n\n15:20\nEfter Nio\n16:20\nElossa 24h\n";
+        let req = test::TestRequest::post().uri("/addtext").set_payload(payload).to_request();
+
+        let bytes = test::call_and_read_body(&app, req).await;        
+        let str = std::str::from_utf8(&bytes).unwrap();
+        println!("test_addtext_date_response_is_exact = '{}'", str);
+        assert!(str.eq("[[\"2025-05-05T15:20:00\",\"Efter Nio\"],[\"2025-05-05T16:20:00\",\"Elossa 24h\"]]"));
+        
+    }
+
 }

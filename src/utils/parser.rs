@@ -8,15 +8,34 @@ fn format_error(msg:&str, oline: Option<(usize, &str)>) -> Result<Vec::<(NaiveDa
     }
 }
 
-pub fn parse_from_text(date: NaiveDate, req_body: &String) -> Result<Vec::<(NaiveDateTime, String)>, String> {
+/// Parsii ohjelmatiedot tekstistä.   
+///   
+/// %Y-%m-%d        (Päiväys, voi jättää pois, jolloin käytetään aiempaa päiväystä.)  
+/// %H:%M           (Alkamisaika)  
+/// Ohjelman nimi  
+pub fn parse_from_text(mut date: NaiveDate, req_body: &String) -> Result<Vec::<(NaiveDateTime, String)>, String> {
     let mut progs: Vec::<(NaiveDateTime, String)> = Vec::new();
     let mut lines = req_body.lines().enumerate();
 
-    while let Some(line1) = lines.next() {    
+    while let Some(line1) = lines.next() {
+
+        if line1.1.is_empty() {
+            continue;
+        }
+
+        if line1.1.len()==10 {
+            let date_result = NaiveDate::parse_from_str(line1.1, "%Y-%m-%d");
+            if date_result.is_err(){
+                return format_error("Expected time or date string (%H:%M).", Some(line1));
+            }
+            date=date_result.unwrap();
+            continue;
+        }
+
         let time = NaiveTime::parse_from_str(line1.1, "%0H:%0M");
         
         if time.is_err() {
-            return format_error("Expected time string (%H:%M).", Some(line1));
+            return format_error("Expected time or date string (%H:%M).", Some(line1));
         }
         let datetime = NaiveDateTime::new(date, time.unwrap());
 
